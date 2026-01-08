@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Typing Game - Sound & Vibration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;height:100vh;display:flex;justify-content:center;align-items:center;background:#111;font-family:Arial;}
+.box{background:#fff;padding:20px;border-radius:10px;width:300px;text-align:center;}
+button{padding:10px 15px;font-size:16px;margin:5px;cursor:pointer;}
+#word{font-size:26px;margin:15px 0;}
+input{width:90%;padding:10px;font-size:16px;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<!-- LANGUAGE SELECT -->
+<div class="box" id="lang">
+  <h2>Select Language / भाषा चुनें</h2>
+  <button onclick="startGame('en')">English</button>
+  <button onclick="startGame('hi')">हिंदी</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="box hidden" id="game">
+  <p>Time: <span id="time">20</span></p>
+  <p>Score: <span id="score">0</span></p>
+  <p>High Score: <span id="high">0</span></p>
+  <p>Level: <span id="level">1</span></p>
+  <div id="word"></div>
+  <input id="input" placeholder="Type & Enter">
+</div>
+
+<!-- GAME OVER -->
+<div class="box hidden" id="over">
+  <h2>Game Over</h2>
+  <p>Your Score: <span id="final">0</span></p>
+  <button onclick="location.reload()">Restart</button>
+</div>
+
+<!-- AUDIO -->
+<audio id="correctSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+<script>
+// LANGUAGE & WORDS
+let language = "";
+const words = {
+  en:{easy:["cat","dog","sun","pen","book"],medium:["apple","mobile","typing","keyboard"],hard:["javascript","developer","programming"]},
+  hi:{easy:["नमस्ते","किताब","सूरज","कुत्ता","बिल्ली"],medium:["कंप्यूटर","मोबाइल","कीबोर्ड","विद्यालय"],hard:["प्रोग्रामिंग","डेवलपर","तकनीकी"]}
+};
+
+// VARIABLES
+let score=0, time=20, level=1, timer, highScore=localStorage.getItem("highScore")||0;
+
+// ELEMENTS
+let langBox=document.getElementById("lang");
+let game=document.getElementById("game");
+let over=document.getElementById("over");
+
+let wordEl=document.getElementById("word");
+let input=document.getElementById("input");
+let scoreEl=document.getElementById("score");
+let timeEl=document.getElementById("time");
+let highEl=document.getElementById("high");
+let levelEl=document.getElementById("level");
+let finalEl=document.getElementById("final");
+
+highEl.innerText=highScore;
+
+// AUDIO ELEMENT
+let correctSound=document.getElementById("correctSound");
+
+// 🌟 START GAME FUNCTION
+function startGame(lang){
+  language = lang;
+  score = 0; level=1; time=20;
+  scoreEl.innerText=score;
+  levelEl.innerText=level;
+  timeEl.innerText=time;
+
+  langBox.classList.add("hidden");
+  game.classList.remove("hidden");
+  input.focus();
+
+  randomWord();
+
+  if(timer) clearInterval(timer);
+  timer=setInterval(()=>{
+    time--;
+    timeEl.innerText=time;
+    if(time===0) endGame();
+  },1000);
+}
+
+// 🔀 RANDOM WORD
+function randomWord(){
+  let list = words[language].easy;
+  if(level===2) list=words[language].medium;
+  if(level===3) list=words[language].hard;
+  wordEl.innerText=list[Math.floor(Math.random()*list.length)];
+}
+
+// 🛑 END GAME
+function endGame(){
+  clearInterval(timer);
+  game.classList.add("hidden");
+  over.classList.remove("hidden");
+  finalEl.innerText=score;
+}
+
+// ⌨️ INPUT EVENT
+input.addEventListener("keyup", function(e){
+  if(e.key==="Enter"){
+    if(input.value===wordEl.innerText){
+      score++;
+      scoreEl.innerText=score;
+
+      // PLAY CORRECT SOUND
+      correctSound.currentTime=0;
+      correctSound.play();
+
+      // LEVEL UP
+      if(score===5){ level=2; levelEl.innerText=level; time=18; timeEl.innerText=time; }
+      if(score===10){ level=3; levelEl.innerText=level; time=15; timeEl.innerText=time; }
+
+      // HIGH SCORE
+      if(score>highScore){
+        highScore=score;
+        localStorage.setItem("highScore",highScore);
+        highEl.innerText=highScore;
+      }
+
+      // VIBRATION (MOBILE)
+      if(navigator.vibrate) navigator.vibrate(100); // 100ms vibration
+
+      randomWord();
+    }
+    input.value="";
+  }
+});
+</script>
+
+</body>
+</html>
